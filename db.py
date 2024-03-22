@@ -139,7 +139,9 @@ def load_db(db_file: str):
             return [tag for tag in self.tag_list if tag.type == "unknown"]
 
 
-    class Tag(BaseModel):
+    class Tag(BaseModel):# table name is tags
+        class Meta:
+            db_table = "tags"
         id = IntegerField(primary_key=True)
         name = CharField(unique=True)
         type = EnumField(["general", "artist", "character", "copyright", "meta", "unknown"]) # unknown is for gelbooru unbased tags, should be fixed in future
@@ -190,6 +192,8 @@ def load_db(db_file: str):
     LocalPost._meta.database = db
     db.connect()
     print("Database connected.")
+    # print all tables
+    print(db.get_tables())
     if not file_exists:
         db.create_tables([Post, Tag, PostTagRelation])
         db.create_tables([LocalPost])
