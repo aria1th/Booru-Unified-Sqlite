@@ -19,7 +19,7 @@ GELBOORU_KEYS_TO_DANBOORU = {
 DANBOORU_KEYS_TO_GELBOORU = {value: key for key, value in GELBOORU_KEYS_TO_DANBOORU.items()}
 
 
-def load_db(db_file: str):
+def load_db(db_file: str, table_names = ["post", "tag", "posttagrelation", "localpost"]) -> dict:
     """
     Return a dictionary with the database objects.
     This allows multiple databases to be loaded in one program.
@@ -50,6 +50,8 @@ def load_db(db_file: str):
     # 'id', 'created_at', 'score', 'width', 'height', 'md5', 'directory', 'image', 'rating', 'source', 'change', 'owner', 'creator_id', 'parent_id', 'sample', 'preview_height', 'preview_width', 'tags', 'title', 'has_notes', 'has_comments', 'file_url', 'preview_url', 'sample_url', 'sample_height', 'sample_width', 'status', 'post_locked', 'has_children'
 
     class Post(BaseModel):
+        class Meta:
+            db_table = table_names[0]
         # "id", "created_at", "uploader_id", "source", "md5", "parent_id", "has_children", "is_deleted", "is_banned", "pixiv_id", "has_active_children", "bit_flags", "has_large", "has_visible_children", "image_width", "image_height", "file_size", "file_ext", "rating", "score", "up_score", "down_score", "fav_count", "file_url", "large_file_url", "preview_file_url"
         id = IntegerField(primary_key=True)
         created_at = CharField()
@@ -65,6 +67,7 @@ def load_db(db_file: str):
         bit_flags = IntegerField(default=0, null=True)
         has_large = BooleanField(default=False, null=True)
         has_visible_children = BooleanField(default=False, null=True)
+        caption = TextField(null=True)
 
         image_width = IntegerField() # width in gelbooru
         image_height = IntegerField() # height in gelbooru
@@ -141,7 +144,7 @@ def load_db(db_file: str):
 
     class Tag(BaseModel):# table name is tags
         class Meta:
-            db_table = "tags"
+            db_table = table_names[1]
         id = IntegerField(primary_key=True)
         name = CharField(unique=True)
         type = EnumField(["general", "artist", "character", "copyright", "meta", "unknown"]) # unknown is for gelbooru unbased tags, should be fixed in future
@@ -167,10 +170,14 @@ def load_db(db_file: str):
         return tag_cache_map[tag_id]
 
     class PostTagRelation(BaseModel):
+        class Meta:
+            db_table = table_names[2]
         post = ForeignKeyField(Post, backref="post_tags")
         tag = ForeignKeyField(Tag, backref="tag_posts")
 
     class LocalPost(BaseModel):
+        class Meta:
+            db_table = table_names[3]
         id = IntegerField(primary_key=True)
         filepath = CharField(null=True)
         latentpath = CharField(null=True)
